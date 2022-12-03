@@ -5,7 +5,7 @@ import qualified Data.List as L
 -- Output, part 2: Sum of the 3 highest calories
 
 main = do 
-    let fileName = "input_files/01dec-1.txt"
+    let fileName = "input_files/01dec.txt"
     content <- readFile fileName
     let calories = map readInt $ lines content
     print . part1 $ caloriesByElf calories
