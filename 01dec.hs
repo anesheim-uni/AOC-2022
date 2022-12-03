@@ -2,7 +2,7 @@ import qualified Text.Read as R
 import qualified Data.List as L
 -- Input: String of numbers, newlines and blank lines 
 -- Output, part 1: Highest calories of elf 
--- Output, part 2: 
+-- Output, part 2: Sum of the 3 highest calories
 
 main = do 
     let fileName = "input_files/01dec-1.txt"
