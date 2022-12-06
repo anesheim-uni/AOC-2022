@@ -1,5 +1,5 @@
 import Data.Char (isDigit, isLetter, isSpace)
-import Data.List (transpose, isPrefixOf, insert, nubBy)
+import Data.List (transpose, isPrefixOf, insert, nubBy, sort)
 import Data.Function (on)
 
 -- Input: Stacks and move instructions
@@ -15,19 +15,9 @@ type Instruction = (Amount, Index, Index)
 main = do 
     let fileName = "input_files/05dec.txt"
     contents <- readFile fileName
-    {--
     let (stacks, instructions) = parseRaw contents 
-    let testing = (stacks, take 1 instructions)
-    let p1 = (1,"PDQRVBHF")
-    let p2 = (9,"VWNCD")
-    let (mp1, mp2) = multiMove 4 (p1,p2)
-    print "Input: "
-    print (p1, p2)
-    print "--------------"
-    print "Output: "
-    print (mp1, mp2)
-    print $ resolveStacks stacks mp1 mp2 --}
-    print $ part1 $ parseRaw contents
+    print $ sort $ part1 $ parseRaw contents
+    print $ sort $ part2 $ parseRaw contents
 
 part1 :: ([Stack], [Instruction]) -> [Stack]
 part1 ([], []) = []
@@ -36,24 +26,39 @@ part1 (stacks, instruction:rest) = part1 (crates, rest)
           where (srcStack, destStack) = getRelevantStacks getStack (srcId, destId) stacks
                 (amount, srcId, destId) = instruction
                 (srcStack', destStack') = multiMove amount (srcStack, destStack)
-                crates = resolveStacks stacks srcStack' destStack'
+                crates = resolveStacks stacks (srcStack', destStack')
 
-resolveStacks :: [Stack] -> Stack -> Stack -> [Stack]
-resolveStacks base srcStack destStack = nubBy ((==) `on` fst) stacks 
+part2 :: ([Stack], [Instruction]) -> [Stack]
+part2 ([], []) = []
+part2 (stack:rest, []) = stack : part2 (rest, []) 
+part2 (stacks, instruction:rest) = part2 (crates, rest)
+          where (srcStack, destStack) = getRelevantStacks getStack (srcId, destId) stacks
+                (amount, srcId, destId) = instruction
+                (srcStack', destStack') = multiMove2 amount (srcStack, destStack)
+                crates = resolveStacks stacks (srcStack', destStack')
+
+resolveStacks :: [Stack] -> (Stack, Stack) -> [Stack]
+resolveStacks base (srcStack, destStack) = nubBy ((==) `on` fst) stacks 
             where stacks = srcStack : destStack : base
 
 getRelevantStacks :: (Index -> [Stack] -> Stack) -> (Index, Index) -> [Stack] -> (Stack, Stack)
 getRelevantStacks f (srcId, destId) stacks = (f srcId stacks, f destId stacks)
 
 multiMove :: Index -> (Stack, Stack) -> (Stack, Stack)
-multiMove n (srcStack, destStack)= (srcStack', destStack')
+multiMove n (srcStack, destStack) = (srcStack', destStack')
         where crates = take n $ snd srcStack 
-              destStack' = (fst destStack, reverse crates ++ snd destStack)
               srcStack' = (fst srcStack, drop n $ snd srcStack)
+              destStack' = (fst destStack, reverse crates ++ snd destStack)
+
+multiMove2 :: Index -> (Stack, Stack) -> (Stack, Stack)
+multiMove2 n (srcStack, destStack) = (srcStack', destStack')
+        where crates = take n $ snd srcStack 
+              srcStack' = (fst srcStack, drop n $ snd srcStack)
+              destStack' = (fst destStack, crates ++ snd destStack)
 
 getStack :: Index -> [Stack] -> Stack 
 getStack index ((idx, items):stacks) | idx == index = (idx, items)
-                                     | otherwise = (index, []) -- Mby bad way to handle not found stack - shouldnt happen tho.
+                                     | otherwise = getStack index stacks-- Mby bad way to handle not found stack - shouldnt happen tho.
 getStack _ [] = undefined
 
 topOfStack :: Stack -> Crate
