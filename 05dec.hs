@@ -14,8 +14,7 @@ main = do
     let fileName = "input_files/05dec.txt"
     contents <- readFile fileName
     let (stacks, instructions) = parseRaw contents 
-    let (_, rawInstructions) = splitStacksFromMoves contents
-    print $ map (str2instruction . removeSpaces) (concatMap lines rawInstructions) 
+    print $ parseRaw contents
 
 
 
