@@ -1,5 +1,5 @@
 import Data.Char (isDigit, isLetter, isSpace)
-import Data.List (transpose, isPrefixOf)
+import Data.List (transpose, isPrefixOf, insert)
 
 -- Input: Stacks and move instructions
 -- Output1: String corresponding to top-of-stack items after complete instructions
@@ -14,10 +14,31 @@ main = do
     let fileName = "input_files/05dec.txt"
     contents <- readFile fileName
     let (stacks, instructions) = parseRaw contents 
-    print $ parseRaw contents
+    let testing = (take 5 stacks, take 5 instructions)
+    print $ part1 testing
 
+part1 :: ([Stack], [Instruction]) -> [Stack]
+part1 (stacks, (amount, src, dest):moves) | amount == 1 = move stacks (src, dest) crate 
+                                          | otherwise = multiMove stacks (amount, src, dest)
+                                          where crate = topOfStack $ getStack src stacks
+multiMove :: [Stack] -> Instruction -> [Stack]
+multiMove stacks (amount, src, dest) = stacks  
 
+move :: [Stack] -> (Index, Index) -> Char -> [Stack]
+move (stack:stacks) (src, dest) crate | idx == src = (idx, drop 1 crates) : stacks
+                                      | idx == dest = (idx, crate : crates) : stacks
+                                      | otherwise = move stacks (src, dest) crate
+                                      where (idx, crates) = stack
+                                
+getStack :: Index -> [Stack] -> Stack 
+getStack index ((i1, items):stacks) | i1 == index = (i1, items)
+                                    | otherwise = (index, []) -- Mby bad way to handle not found stack - shouldnt happen tho.
 
+topOfStack :: Stack -> Char 
+topOfStack = head . snd
+
+findRelevantStacks :: (Index, Index) -> [Stack] -> [Stack]
+findRelevantStacks (src, dest) stacks = filter (== src) (stacks)
 
 ----------------------------- Parsing! -----------------------------
 parseRaw :: String -> ([Stack], [Instruction])
