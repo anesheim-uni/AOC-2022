@@ -18,6 +18,9 @@ main = do
     print $ map (str2instruction . removeSpaces) (concatMap lines rawInstructions) 
 
 
+
+
+----------------------------- Parsing! -----------------------------
 parseRaw :: String -> ([Stack], [Instruction])
 parseRaw str = (stacks, instructions)
           where (rawStacks, rawInstructions) = splitStacksFromMoves str
