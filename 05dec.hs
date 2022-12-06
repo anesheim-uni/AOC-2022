@@ -1,11 +1,13 @@
 import Data.Char (isDigit, isLetter, isSpace)
-import Data.List (transpose, isPrefixOf, insert)
+import Data.List (transpose, isPrefixOf, insert, nubBy)
+import Data.Function (on)
 
 -- Input: Stacks and move instructions
 -- Output1: String corresponding to top-of-stack items after complete instructions
 -- Output2: 
 
-type Stack = (Int, [Char])
+type Crate = Char 
+type Stack = (Int, [Crate])
 type Index = Int
 type Amount = Int 
 type Instruction = (Amount, Index, Index)
@@ -13,32 +15,49 @@ type Instruction = (Amount, Index, Index)
 main = do 
     let fileName = "input_files/05dec.txt"
     contents <- readFile fileName
+    {--
     let (stacks, instructions) = parseRaw contents 
-    let testing = (take 5 stacks, take 5 instructions)
-    print $ part1 testing
+    let testing = (stacks, take 1 instructions)
+    let p1 = (1,"PDQRVBHF")
+    let p2 = (9,"VWNCD")
+    let (mp1, mp2) = multiMove 4 (p1,p2)
+    print "Input: "
+    print (p1, p2)
+    print "--------------"
+    print "Output: "
+    print (mp1, mp2)
+    print $ resolveStacks stacks mp1 mp2 --}
+    print $ part1 $ parseRaw contents
 
 part1 :: ([Stack], [Instruction]) -> [Stack]
-part1 (stacks, (amount, src, dest):moves) | amount == 1 = move stacks (src, dest) crate 
-                                          | otherwise = multiMove stacks (amount, src, dest)
-                                          where crate = topOfStack $ getStack src stacks
-multiMove :: [Stack] -> Instruction -> [Stack]
-multiMove stacks (amount, src, dest) = stacks  
+part1 ([], []) = []
+part1 (stack:rest, []) = stack : part1 (rest, []) 
+part1 (stacks, instruction:rest) = part1 (crates, rest)
+          where (srcStack, destStack) = getRelevantStacks getStack (srcId, destId) stacks
+                (amount, srcId, destId) = instruction
+                (srcStack', destStack') = multiMove amount (srcStack, destStack)
+                crates = resolveStacks stacks srcStack' destStack'
 
-move :: [Stack] -> (Index, Index) -> Char -> [Stack]
-move (stack:stacks) (src, dest) crate | idx == src = (idx, drop 1 crates) : stacks
-                                      | idx == dest = (idx, crate : crates) : stacks
-                                      | otherwise = move stacks (src, dest) crate
-                                      where (idx, crates) = stack
-                                
+resolveStacks :: [Stack] -> Stack -> Stack -> [Stack]
+resolveStacks base srcStack destStack = nubBy ((==) `on` fst) stacks 
+            where stacks = srcStack : destStack : base
+
+getRelevantStacks :: (Index -> [Stack] -> Stack) -> (Index, Index) -> [Stack] -> (Stack, Stack)
+getRelevantStacks f (srcId, destId) stacks = (f srcId stacks, f destId stacks)
+
+multiMove :: Index -> (Stack, Stack) -> (Stack, Stack)
+multiMove n (srcStack, destStack)= (srcStack', destStack')
+        where crates = take n $ snd srcStack 
+              destStack' = (fst destStack, reverse crates ++ snd destStack)
+              srcStack' = (fst srcStack, drop n $ snd srcStack)
+
 getStack :: Index -> [Stack] -> Stack 
-getStack index ((i1, items):stacks) | i1 == index = (i1, items)
-                                    | otherwise = (index, []) -- Mby bad way to handle not found stack - shouldnt happen tho.
+getStack index ((idx, items):stacks) | idx == index = (idx, items)
+                                     | otherwise = (index, []) -- Mby bad way to handle not found stack - shouldnt happen tho.
+getStack _ [] = undefined
 
-topOfStack :: Stack -> Char 
+topOfStack :: Stack -> Crate
 topOfStack = head . snd
-
-findRelevantStacks :: (Index, Index) -> [Stack] -> [Stack]
-findRelevantStacks (src, dest) stacks = filter (== src) (stacks)
 
 ----------------------------- Parsing! -----------------------------
 parseRaw :: String -> ([Stack], [Instruction])
@@ -72,7 +91,7 @@ str2instruction = go (0, 0, 0)
 str2stack :: String -> Stack 
 str2stack str = (index, crates)
       where index = readInt (takeWhile isDigit str)
-            crates = filter isLetter str
+            crates = reverse $ filter isLetter str
 
 clean :: [String] -> [String]
 clean [] = []
