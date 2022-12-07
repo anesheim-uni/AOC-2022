@@ -4,7 +4,7 @@ import Data.Function (on)
 
 -- Input: Stacks and move instructions
 -- Output1: String corresponding to top-of-stack items after complete instructions
--- Output2: 
+-- Output2: String corresponding to top-of-stack items after complete instructions, preserving new ordering of moves.
 
 type Crate = Char 
 type Stack = (Int, [Crate])
